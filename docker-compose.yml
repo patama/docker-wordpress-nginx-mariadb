@@ -1,0 +1,50 @@
+nx:
+  image: nginx
+  restart: always
+  ports:
+    - 80:80
+    - 443:443
+  links:
+    - wordpress
+  volumes_from:
+    - wordpress:ro
+  volumes:
+    - ./etc/nginx/conf.d:/etc/nginx/conf.d:ro
+    - ./var/log/nginx:/var/log/nginx
+
+wordpress:
+  build: wordpress
+  restart: always
+  links:
+    - mysql
+    - memcached
+  environment:
+    WORDPRESS_DB_USER: wordpress
+    WORDPRESS_DB_PASSWORD: password
+    WORDPRESS_DB_NAME: wordpress
+
+mysql:
+  build: mariadb
+  restart: always
+  volumes:
+    - ./var/mysql:/var/lib/mysql
+  environment:
+    MYSQL_DATABASE: wordpress
+    MYSQL_USER: wordpress
+    MYSQL_PASSWORD: password
+    MYSQL_ROOT_PASSWORD: password
+
+memcached:
+  image: memcached
+  restart: always
+
+cadvisor:
+  image: google/cadvisor
+  ports:
+    - 8080:8080
+  restart: always
+  volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:rw
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
